@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Capability Dashboard — EPYC SaaS Engineering</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:      #00C2DE;
+  --dark-teal: #007B8E;
+  --gold:      #C1A968;
+  --dark:      #0F1923;
+  --panel:     #162330;
+  --card:      #1C2E3D;
+  --border:    #243647;
+  --text:      #E8EDF2;
+  --muted:     #7A94A8;
+  --green:     #2ECC71;
+  --green-bg:  rgba(46,204,113,0.15);
+  --yellow:    #F5C842;
+  --yellow-bg: rgba(245,200,66,0.15);
+  --red:       #E74C3C;
+  --red-bg:    rgba(231,76,60,0.15);
+  --gray-bg:   rgba(122,148,168,0.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--dark);color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--panel);border-bottom:2px solid var(--teal);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:16px;}
+.header-logo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;color:var(--teal);letter-spacing:3px;}
+.header-divider{width:1px;height:28px;background:var(--border);}
+.header-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:1px;}
+.search-box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:13px;width:210px;outline:none;transition:border-color .2s;}
+.search-box:focus{border-color:var(--teal);}
+.search-box::placeholder{color:var(--muted);}
+
+/* NAV */
+.nav{background:var(--panel);border-bottom:1px solid var(--border);display:flex;padding:0 28px;gap:4px;}
+.nav-tab{padding:10px 22px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;text-transform:uppercase;user-select:none;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+
+/* LAYOUT */
+.main{padding:24px 28px;}
+.view{display:none;animation:fadeIn .2s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.stat-card.c-teal::before{background:var(--teal);}
+.stat-card.c-gold::before{background:var(--gold);}
+.stat-card.c-green::before{background:var(--green);}
+.stat-card.c-red::before{background:var(--red);}
+.stat-card.c-yellow::before{background:var(--yellow);}
+.stat-value{font-family:'Rajdhani',sans-serif;font-size:38px;font-weight:700;line-height:1;margin-bottom:4px;}
+.stat-card.c-teal .stat-value{color:var(--teal);}
+.stat-card.c-gold .stat-value{color:var(--gold);}
+.stat-card.c-green .stat-value{color:var(--green);}
+.stat-card.c-red .stat-value{color:var(--red);}
+.stat-card.c-yellow .stat-value{color:var(--yellow);}
+.stat-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);}
+.filter-row{display:flex;gap:8px;align-items:center;}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:12px;outline:none;cursor:pointer;}
+.gold-line{height:2px;background:linear-gradient(90deg,var(--teal),var(--gold));border-radius:1px;margin-bottom:20px;}
+
+/* ROSTER */
+.roster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;}
+.person-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.person-card:hover{border-color:var(--teal);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,194,222,.1);}
+.person-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.person-card.role-pm::before{background:var(--teal);}
+.person-card.role-sr::before{background:var(--dark-teal);}
+.person-card.role-svc::before{background:#005F6B;}
+.person-card.role-sl::before{background:var(--gold);}
+.person-card.role-tw::before{background:#607D8B;}
+.person-card.role-us::before{background:#455A64;}
+.person-card.has-pending::before{background:var(--red);}
+.person-name{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin-bottom:3px;padding-left:10px;}
+.person-role{font-size:11px;color:var(--muted);padding-left:10px;margin-bottom:10px;}
+.person-skills-preview{display:flex;gap:4px;flex-wrap:wrap;padding-left:10px;}
+.skill-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.skill-dot.G{background:var(--green);}
+.skill-dot.Y{background:var(--yellow);}
+.skill-dot.R{background:var(--red);}
+.skill-dot.N{background:var(--border);}
+.pending-badge{font-size:10px;background:var(--red-bg);color:var(--red);border:1px solid rgba(231,76,60,.4);border-radius:4px;padding:2px 6px;margin-left:10px;margin-top:6px;display:inline-block;}
+
+/* MATRIX */
+.matrix-wrap{overflow-x:auto;}
+table.matrix{width:100%;border-collapse:collapse;font-size:12px;min-width:820px;}
+.matrix th{background:var(--panel);color:var(--teal);font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:10px 6px;text-align:center;border:1px solid var(--border);}
+.matrix th.left{text-align:left;padding-left:14px;min-width:140px;}
+.matrix th.role-col{min-width:170px;text-align:left;padding-left:14px;}
+.matrix td{border:1px solid var(--border);padding:6px 6px;text-align:center;vertical-align:middle;}
+.matrix tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+.matrix tr:hover td{background:rgba(0,194,222,.04);}
+.matrix td.name-col{font-weight:600;text-align:left;padding-left:14px;cursor:pointer;white-space:nowrap;}
+.matrix td.name-col:hover{color:var(--teal);}
+.matrix td.role-col{font-size:11px;color:var(--muted);text-align:left;padding-left:14px;}
+.cell-btn{width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s;}
+.cell-btn:hover{transform:scale(1.25);}
+.cell-btn.G{background:var(--green-bg);color:var(--green);border:1.5px solid var(--green);}
+.cell-btn.Y{background:var(--yellow-bg);color:var(--yellow);border:1.5px solid var(--yellow);}
+.cell-btn.R{background:var(--red-bg);color:var(--red);border:1.5px solid var(--red);}
+.cell-btn.N{background:var(--gray-bg);color:var(--muted);border:1.5px solid var(--border);}
+.matrix-legend{display:flex;gap:20px;margin-top:12px;align-items:center;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* COVERAGE */
+.coverage-table{width:100%;border-collapse:collapse;font-size:13px;}
+.coverage-table th{background:var(--panel);color:var(--teal);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border:1px solid var(--border);}
+.coverage-table td{border:1px solid var(--border);padding:10px 14px;vertical-align:middle;}
+.coverage-table tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+.coverage-table tr.gap-row td{background:rgba(231,76,60,.04);}
+.coverage-table tr:hover td{background:rgba(0,194,222,.04);}
+.status-pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'Rajdhani',sans-serif;letter-spacing:.5px;}
+.status-pill.covered{background:var(--green-bg);color:var(--green);border:1px solid rgba(46,204,113,.4);}
+.status-pill.gap{background:var(--red-bg);color:var(--red);border:1px solid rgba(231,76,60,.4);}
+.status-pill.warning{background:var(--yellow-bg);color:var(--yellow);border:1px solid rgba(245,200,66,.4);}
+.status-pill.filled{background:var(--green-bg);color:var(--green);border:1px solid rgba(46,204,113,.4);}
+
+/* HEADCOUNT */
+.hc-table{width:100%;border-collapse:collapse;font-size:13px;}
+.hc-table th{background:var(--panel);color:var(--teal);font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:10px 14px;text-align:left;border:1px solid var(--border);}
+.hc-table td{border:1px solid var(--border);padding:11px 14px;vertical-align:middle;}
+.hc-table tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+.hc-table tr:hover td{background:rgba(0,194,222,.04);}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--teal);border-radius:10px;width:580px;max-width:95vw;max-height:88vh;overflow-y:auto;padding:28px;position:relative;animation:slideUp .2s ease;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-close{position:absolute;top:16px;right:18px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;transition:color .15s;}
+.modal-close:hover{color:var(--text);}
+.modal-name{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;margin-bottom:2px;}
+.modal-role{font-size:13px;color:var(--teal);margin-bottom:20px;}
+.modal-section{margin-bottom:20px;}
+.modal-section-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.skill-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(36,54,71,.5);}
+.skill-name{font-size:13px;}
+.skill-cycle-btn{padding:4px 14px;border-radius:20px;border:none;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;min-width:110px;text-align:center;}
+.skill-cycle-btn.G{background:var(--green-bg);color:var(--green);border:1.5px solid rgba(46,204,113,.5);}
+.skill-cycle-btn.Y{background:var(--yellow-bg);color:var(--yellow);border:1.5px solid rgba(245,200,66,.5);}
+.skill-cycle-btn.R{background:var(--red-bg);color:var(--red);border:1.5px solid rgba(231,76,60,.5);}
+.skill-cycle-btn.N{background:var(--gray-bg);color:var(--muted);border:1.5px solid var(--border);}
+.resp-list{list-style:none;}
+.resp-list li{padding:6px 0;font-size:13px;display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid rgba(36,54,71,.5);}
+.resp-list li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:5px;}
+.gold-bar{height:2px;background:var(--gold);border-radius:1px;margin:16px 0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--dark-teal);color:white;padding:10px 18px;border-radius:8px;font-size:13px;font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:.5px;z-index:300;opacity:0;transform:translateY(10px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* INLINE EDITING */
+.inline-edit{background:transparent;border:1px solid transparent;border-radius:4px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:4px 6px;width:100%;transition:all .15s;outline:none;}
+.inline-edit:hover{border-color:var(--border);}
+.inline-edit:focus{border-color:var(--teal);background:var(--card);}
+
+/* ADD ROW / DELETE BUTTONS */
+.add-row-btn{background:var(--card);border:1px solid var(--teal);border-radius:6px;color:var(--teal);font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;padding:5px 14px;cursor:pointer;transition:all .15s;}
+.add-row-btn:hover{background:var(--teal);color:var(--dark);}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:13px;padding:4px 6px;border-radius:4px;transition:all .15s;}
+.del-btn{color:var(--muted);}
+.del-btn:hover{color:var(--red);background:var(--red-bg);}
+
+/* CERTS */
+.cert-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(193,169,104,0.15);color:var(--gold);border:1px solid rgba(193,169,104,0.35);border-radius:4px;font-size:10px;padding:2px 7px;margin:2px 2px 0 0;font-family:'Source Sans 3',sans-serif;}
+.cert-tag .cert-del{cursor:pointer;opacity:.6;margin-left:2px;font-size:11px;line-height:1;}
+.cert-tag .cert-del:hover{opacity:1;color:var(--red);}
+.cert-add-input{background:transparent;border:1px dashed var(--border);border-radius:4px;color:var(--text);font-size:11px;padding:2px 7px;width:130px;outline:none;font-family:'Source Sans 3',sans-serif;}
+.cert-add-input:focus{border-color:var(--gold);background:var(--card);}
+
+/* ARCHIVE BADGE */
+.archive-badge{font-size:10px;background:rgba(122,148,168,0.15);color:var(--muted);border:1px solid var(--border);border-radius:4px;padding:2px 6px;margin-left:10px;margin-top:4px;display:inline-block;}
+.arch-btn{color:var(--muted);}
+.arch-btn:hover{color:var(--gold);background:rgba(193,169,104,0.15);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">AMD</div>
+    <div class="header-divider"></div>
+    <div class="header-title">EPYC SaaS Engineering — Team Capability Dashboard</div>
+  </div>
+  <input class="search-box" type="text" placeholder="Search name or role..." id="globalSearch" oninput="applySearch()">
+</div>
+
+<div class="nav">
+  <div class="nav-tab active" onclick="switchTab('roster',this)">Roster</div>
+  <div class="nav-tab" onclick="switchTab('matrix',this)">Skills Matrix</div>
+  <div class="nav-tab" onclick="switchTab('coverage',this)">Coverage & Gaps</div>
+  <div class="nav-tab" onclick="switchTab('headcount',this)">Open Headcount</div>
+</div>
+
+<div class="main">
+
+<!-- ROSTER -->
+<div class="view active" id="view-roster">
+  <div class="stats-row">
+    <div class="stat-card c-teal"><div class="stat-value" id="stat-total">18</div><div class="stat-label">Total Members</div></div>
+    <div class="stat-card c-green"><div class="stat-value" id="stat-confirmed">15</div><div class="stat-label">Confirmed Active</div></div>
+    <div class="stat-card c-gold"><div class="stat-value">6</div><div class="stat-label">Role Functions</div></div>
+    <div class="stat-card c-red"><div class="stat-value" id="stat-pending">3</div><div class="stat-label">Pending / Unconfirmed</div></div>
+  </div>
+  <div class="gold-line"></div>
+  <div class="section-header">
+    <span class="section-title">Team Members — Click any card to view &amp; edit profile</span>
+    <div class="filter-row">
+      <select class="filter-select" id="rosterFilter" onchange="renderRoster()">
+        <option value="">All Roles</option>
+        <option value="role-pm">Program Management</option>
+        <option value="role-sr">Sr. Service Desk</option>
+        <option value="role-svc">Shared Svc. Desk</option>
+        <option value="role-sl">Shift Leaders</option>
+        <option value="role-tw">Technical Writing</option>
+        <option value="role-us">Program Manager (US)</option>
+      </select>
+      <button class="add-row-btn" onclick="resetToDefaults()" style="border-color:var(--gold);color:var(--gold);" onmouseover="this.style.background='var(--gold)';this.style.color='var(--dark)'" onmouseout="this.style.background='';this.style.color='var(--gold)'">↺ Reset</button>
+    </div>
+  </div>
+  <div class="roster-grid" id="rosterGrid"></div>
+
+  <!-- ALUMNI / ARCHIVED SECTION -->
+  <div id="alumniSection" style="margin-top:28px;display:none;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;cursor:pointer;" onclick="toggleAlumni()">
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+      <span style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;" id="alumniToggleLabel">▶ Alumni / Archived (0)</span>
+      <div style="height:1px;flex:1;background:var(--border);"></div>
+    </div>
+    <div class="roster-grid" id="alumniGrid" style="display:none;opacity:0.6;"></div>
+  </div>
+</div>
+
+<!-- SKILLS MATRIX -->
+<div class="view" id="view-matrix">
+  <div class="section-header">
+    <span class="section-title">Skills Matrix — Names & roles editable · Click any rating to cycle</span>
+    <div class="filter-row">
+      <select class="filter-select" id="matrixFilter" onchange="renderMatrix()">
+        <option value="">All Roles</option>
+        <option value="role-pm">Program Management</option>
+        <option value="role-sr">Sr. Service Desk</option>
+        <option value="role-svc">Shared Svc. Desk</option>
+        <option value="role-sl">Shift Leaders</option>
+        <option value="role-tw">Technical Writing</option>
+        <option value="role-us">Program Manager (US)</option>
+      </select>
+      <button class="add-row-btn" onclick="addMatrixRow()">+ Add Member</button>
+    </div>
+  </div>
+  <div class="matrix-wrap"><table class="matrix" id="matrixTable"></table></div>
+  <div class="matrix-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Strong</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>Developing</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Gap</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div>N/A for role</div>
+    <span style="color:var(--muted);font-size:11px;margin-left:8px;font-style:italic;">Click name or role to edit · Click dot to cycle rating · ⊠ to archive · Stats update live</span>
+  </div>
+</div>
+
+<!-- COVERAGE -->
+<div class="view" id="view-coverage">
+  <div class="stats-row" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card c-green"><div class="stat-value" id="cov-covered">8</div><div class="stat-label">Areas Covered</div></div>
+    <div class="stat-card c-red"><div class="stat-value" id="cov-gaps">4</div><div class="stat-label">Gaps Identified</div></div>
+    <div class="stat-card c-gold"><div class="stat-value" id="cov-total">12</div><div class="stat-label">Total Areas Tracked</div></div>
+  </div>
+  <div class="gold-line"></div>
+  <div class="section-header">
+    <span class="section-title">Primary & Backup Coverage Map — All fields editable</span>
+    <div class="filter-row">
+      <select class="filter-select" id="coverageFilter" onchange="renderCoverage()">
+        <option value="">All Areas</option>
+        <option value="gap">Gaps Only</option>
+        <option value="covered">Covered Only</option>
+      </select>
+      <button class="add-row-btn" onclick="addCoverageRow()">+ Add Row</button>
+    </div>
+  </div>
+  <table class="coverage-table" id="coverageTable"></table>
+  <p style="margin-top:10px;font-size:11px;color:var(--muted);font-style:italic;">Click any field to edit · Click status pill to toggle Covered / Gap · Type note text to auto-set status</p>
+</div>
+
+<!-- HEADCOUNT -->
+<div class="view" id="view-headcount">
+  <div class="stats-row">
+    <div class="stat-card c-teal"><div class="stat-value" id="hc-total">5</div><div class="stat-label">Total Open / Pending</div></div>
+    <div class="stat-card c-yellow"><div class="stat-value" id="hc-pending">2</div><div class="stat-label">Pending Confirmation</div></div>
+    <div class="stat-card c-gold"><div class="stat-value" id="hc-unconfirmed">2</div><div class="stat-label">Unconfirmed Roles</div></div>
+    <div class="stat-card c-red"><div class="stat-value" id="hc-gap">1</div><div class="stat-label">Hard Gaps (No Owner)</div></div>
+  </div>
+  <div class="gold-line"></div>
+  <div class="section-header">
+    <span class="section-title">Open Headcount Tracker — All fields editable</span>
+    <div class="filter-row">
+      <select class="filter-select" id="hcFilter" onchange="renderHeadcount()">
+        <option value="">All Items</option>
+        <option value="Pending">Pending</option>
+        <option value="Unconfirmed">Unconfirmed</option>
+        <option value="Gap">Gap</option>
+        <option value="Filled">Filled</option>
+      </select>
+      <button class="add-row-btn" onclick="addHcRow()">+ Add Role</button>
+    </div>
+  </div>
+  <table class="hc-table" id="hcTable"></table>
+  <p style="margin-top:10px;font-size:11px;color:var(--muted);font-style:italic;">Click any field to edit · Click status pill to cycle · ✕ to remove a resolved or cancelled role · Stats update live</p>
+</div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalBg(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SKILLS = ["Ticket & SLA Mgmt","Technical Troubleshooting","Customer Comms","Escalation Mgmt","KB / Docs","Shift Coordination","Program Mgmt","QA / Process"];
+const SKILL_SHORT = ["Ticket &\nSLA","Tech\nTrouble.","Customer\nComms","Escalation\nMgmt","KB /\nDocs","Shift\nCoord.","Program\nMgmt","QA /\nProcess"];
+const SCORE_LABEL = {G:"● Strong",Y:"● Developing",R:"● Gap",N:"— N/A"};
+const SCORE_CYCLE = {G:"Y",Y:"R",R:"N",N:"G"};
+const RESPS = {
+  "role-pm":  ["Own program delivery & milestone tracking","Stakeholder communication & escalation","Cross-functional coordination","Reporting cadence to leadership"],
+  "role-sr":  ["Tier 2/3 technical issue resolution","SLA governance & queue health","Escalation bridge to engineering","Process improvement & runbook ownership"],
+  "role-svc": ["Tier 1/2 ticket handling & resolution","Customer communication & updates","SLA adherence & documentation","Knowledge base contribution"],
+  "role-sl":  ["Shift handoff & continuity","Real-time queue management","Escalation triage & routing","Team coaching during shift"],
+  "role-tw":  ["Runbook & KB documentation","Process documentation standards","Advisory review for accuracy","Audience-specific content (internal/external)"],
+  "role-us":  ["Customer-facing program ownership","QA oversight & quality governance","US stakeholder liaison","Demand intake & prioritization"],
+};
+
+let PEOPLE = [
+  {name:"Navya",          role:"Program Mgmt (Team Leader)",    rc:"role-pm",  p:false, archived:false, certs:[], notes:"", resps:null, s:["N","N","G","G","Y","N","G","G"]},
+  {name:"Prasanna Theja", role:"Sr. Service Desk Engineer",      rc:"role-sr",  p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","G","G","G","Y","Y","N"]},
+  {name:"Asha",           role:"Prog. Mgmt. Sr. Tech Support",   rc:"role-sr",  p:false, archived:false, certs:[], notes:"", resps:null, s:["G","Y","G","Y","Y","N","G","Y"]},
+  {name:"Kalyan",         role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","Y","Y","Y","Y","N","N"]},
+  {name:"Sravani",        role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","G","Y","N","Y","N","N"]},
+  {name:"Kumar",          role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","Y","Y","N","Y","N","N"]},
+  {name:"Silpa",          role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","Y","G","Y","Y","N","N","N"]},
+  {name:"Sandeep",        role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","Y","Y","N","G","N","N"]},
+  {name:"Viswanath",      role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["Y","G","Y","Y","N","Y","N","N"]},
+  {name:"Fathima",        role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:true,  archived:false, certs:[], notes:"", resps:null, s:["Y","Y","Y","R","N","R","N","N"]},
+  {name:"Chanukya",       role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:true,  archived:false, certs:[], notes:"", resps:null, s:["Y","Y","Y","R","N","R","N","N"]},
+  {name:"Keerthana",      role:"Shared Svc. Sr. Tech Support",   rc:"role-svc", p:false, archived:false, certs:[], notes:"", resps:null, s:["G","Y","G","Y","Y","Y","N","N"]},
+  {name:"Prasanna (SL)",  role:"Shift Leader",                   rc:"role-sl",  p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","G","G","Y","G","Y","N"]},
+  {name:"Sai",            role:"Shift Leader",                   rc:"role-sl",  p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","G","G","N","G","Y","N"]},
+  {name:"Sourav",         role:"Shift Leader",                   rc:"role-sl",  p:false, archived:false, certs:[], notes:"", resps:null, s:["G","G","Y","G","N","G","Y","N"]},
+  {name:"Sushanth Gowda", role:"Technical Writer",               rc:"role-tw",  p:false, archived:false, certs:[], notes:"", resps:null, s:["N","N","G","N","G","N","Y","G"]},
+  {name:"Abishek",        role:"Technical Writer (Advisory)",    rc:"role-tw",  p:false, archived:false, certs:[], notes:"", resps:null, s:["N","N","G","N","G","N","G","G"]},
+  {name:"Valli",          role:"Program Manager (US)",           rc:"role-us",  p:true,  archived:false, certs:[], notes:"", resps:null, s:["Y","N","G","G","Y","N","G","G"]},
+];
+
+// Seed per-person resps from role defaults (resps:null means "use role default")
+function getResps(p) {
+  if (p.resps !== null) return p.resps;
+  return [...(RESPS[p.rc] || [])];
+}
+function ensureResps(p) {
+  if (p.resps === null) p.resps = [...(RESPS[p.rc] || [])];
+}
+
+// ── DEFAULTS snapshot for reset ──
+const PEOPLE_DEFAULTS = JSON.parse(JSON.stringify(PEOPLE));
+function resetToDefaults() {
+  if (!confirm('Reset all member data to original defaults? This will undo all name, role, skills, cert, notes, responsibilities, and archive changes.')) return;
+  PEOPLE.length = 0;
+  PEOPLE_DEFAULTS.forEach(p => PEOPLE.push(JSON.parse(JSON.stringify(p))));
+  renderRoster(); renderMatrix(); recalcRosterStats();
+  toast('Roster reset to defaults');
+}
+
+const COVERAGE = [
+  {area:"Program / Delivery Oversight",      primary:"Navya",           backup:"Asha",                gap:false, note:"Covered"},
+  {area:"Sr. Technical Escalations",         primary:"Prasanna Theja",  backup:"Shift Leaders",        gap:false, note:"Covered"},
+  {area:"US Program & QA",                   primary:"Valli",           backup:"Sunnetha ?",           gap:true,  note:"Backup unconfirmed"},
+  {area:"Shift 1 — Operations Coverage",     primary:"Prasanna (SL)",   backup:"Kalyan / Sravani",     gap:false, note:"Covered"},
+  {area:"Shift 2 — Operations Coverage",     primary:"Sai",             backup:"Kumar / Silpa",        gap:false, note:"Covered"},
+  {area:"Shift 3 — Operations Coverage",     primary:"Sourav",          backup:"Sandeep / Viswanath",  gap:false, note:"Covered"},
+  {area:"Tier 1 Ticket Queue",               primary:"Shared Svc. Team",backup:"Shift Leaders",        gap:false, note:"Covered"},
+  {area:"Knowledge Base & Documentation",    primary:"Sushanth Gowda",  backup:"Abishek",              gap:false, note:"Covered"},
+  {area:"New Hire Onboarding (Tech Support)",primary:"Prasanna Theja",  backup:"TBD",                  gap:true,  note:"No formal backup"},
+  {area:"Fathima — Onboarding",              primary:"TBD *",           backup:"—",                    gap:true,  note:"Confirmation pending"},
+  {area:"Chanukya — Onboarding",             primary:"TBD *",           backup:"—",                    gap:true,  note:"Confirmation pending"},
+  {area:"Escalation Management (Tier 3)",    primary:"Prasanna Theja",  backup:"Navya",                gap:false, note:"Covered"},
+];
+
+const HEADCOUNT = [
+  {role:"Program Manager (US) — Backup",                   level:"Senior IC",       status:"Unconfirmed",  type:"warning", action:"Confirm Sunnetha assignment or identify replacement"},
+  {role:"Shared Svc. Desk — Sr. Tech Support (Fathima)",   level:"Sr. Tech Support",status:"Pending *",    type:"warning", action:"Confirm headcount — complete onboarding paperwork"},
+  {role:"Shared Svc. Desk — Sr. Tech Support (Chanukya)",  level:"Sr. Tech Support",status:"Pending *",    type:"warning", action:"Confirm headcount — complete onboarding paperwork"},
+  {role:"New Hire Onboarding Owner",                        level:"Sr. Lead / TL",   status:"Gap — TBD",    type:"gap",     action:"Assign formal backup owner; document runbook"},
+  {role:"Sunnetha (US Program Support)",                    level:"Program Support", status:"Unconfirmed ?",type:"warning", action:"Confirm role scope and start date"},
+];
+
+// ── TABS ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('view-'+tab).classList.add('active');
+  ({roster:renderRoster,matrix:renderMatrix,coverage:renderCoverage,headcount:renderHeadcount})[tab]();
+}
+
+// ── SEARCH ──
+function applySearch() {
+  const q = document.getElementById('globalSearch').value.toLowerCase();
+  document.querySelectorAll('.person-card').forEach(c => {
+    c.style.display = (c.dataset.name+c.dataset.role).toLowerCase().includes(q) ? '' : 'none';
+  });
+  document.querySelectorAll('tr[data-idx]').forEach(r => {
+    const p = PEOPLE[+r.dataset.idx];
+    r.style.display = (p.name+p.role).toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ── ROSTER ──
+let alumniOpen = false;
+function toggleAlumni() {
+  alumniOpen = !alumniOpen;
+  document.getElementById('alumniGrid').style.display = alumniOpen ? '' : 'none';
+  const archived = PEOPLE.filter(p=>p.archived);
+  document.getElementById('alumniToggleLabel').textContent =
+    (alumniOpen ? '▼' : '▶') + ` Alumni / Archived (${archived.length})`;
+}
+
+function renderRoster() {
+  const f = document.getElementById('rosterFilter').value;
+  const active   = PEOPLE.filter(p=>!p.archived && (f?p.rc===f:true));
+  const archived = PEOPLE.filter(p=>p.archived);
+
+  document.getElementById('rosterGrid').innerHTML = active.map(p => {
+    const i = PEOPLE.indexOf(p);
+    const certHtml = p.certs && p.certs.length
+      ? `<div style="padding-left:10px;margin-top:6px;display:flex;flex-wrap:wrap;gap:3px;">${p.certs.map(c=>`<span class="cert-tag">🎓 ${c}</span>`).join('')}</div>`
+      : '';
+    return `<div class="person-card ${p.rc}${p.p?' has-pending':''}" data-name="${p.name}" data-role="${p.role}" onclick="openModal(${i})">
+      <div class="person-name">${p.name}${p.p?'<span style="color:var(--red);font-size:11px;margin-left:5px;">*</span>':''}</div>
+      <div class="person-role">${p.role}</div>
+      <div class="person-skills-preview">${p.s.map(s=>`<div class="skill-dot ${s}"></div>`).join('')}</div>
+      ${certHtml}
+      ${p.p?'<div class="pending-badge">Pending Confirmation</div>':''}
+    </div>`;
+  }).join('');
+
+  // Alumni grid
+  const alumniSection = document.getElementById('alumniSection');
+  alumniSection.style.display = archived.length ? '' : 'none';
+  document.getElementById('alumniToggleLabel').textContent =
+    (alumniOpen ? '▼' : '▶') + ` Alumni / Archived (${archived.length})`;
+  document.getElementById('alumniGrid').innerHTML = archived.map(p => {
+    const i = PEOPLE.indexOf(p);
+    return `<div class="person-card role-tw" data-name="${p.name}" data-role="${p.role}" onclick="openModal(${i})" style="opacity:.55;border-style:dashed;">
+      <div class="person-name" style="color:var(--muted);">${p.name}</div>
+      <div class="person-role">${p.role}</div>
+      <div class="archive-badge">Archived</div>
+    </div>`;
+  }).join('');
+}
+
+// ── MATRIX ──
+let MATRIX_INDICES = [];
+
+function renderMatrix() {
+  const f = document.getElementById('matrixFilter').value;
+  const filtered = PEOPLE.map((p,i)=>({...p,_i:i}))
+    .filter(p=>!p.archived && (f?p.rc===f:true));
+  MATRIX_INDICES = filtered.map(p=>p._i);
+
+  const roleOrder = ['role-pm','role-sr','role-svc','role-sl','role-tw','role-us'];
+  const roleLabels = {
+    'role-pm':'PROGRAM MGMT','role-sr':'SR. SERVICE DESK',
+    'role-svc':'SHARED SVC. DESK','role-sl':'SHIFT LEADERS',
+    'role-tw':'TECHNICAL WRITING','role-us':'PROGRAM MGR (US)'
+  };
+  const roleColors = {
+    'role-pm':'var(--teal)','role-sr':'var(--dark-teal)',
+    'role-svc':'#005F6B','role-sl':'var(--gold)',
+    'role-tw':'#607D8B','role-us':'#455A64'
+  };
+
+  let bodyRows = '';
+  const groups = f ? [f] : roleOrder;
+  groups.forEach(rc => {
+    const groupPeople = filtered.filter(p=>p.rc===rc);
+    if (!groupPeople.length) return;
+    bodyRows += `<tr>
+      <td colspan="${3+SKILLS.length}" style="background:${roleColors[rc]};color:#fff;font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;padding:5px 14px;border:none;">${roleLabels[rc]}</td>
+    </tr>`;
+    groupPeople.forEach((p, r) => {
+      const certDisplay = (p.certs||[]).map(c=>`<span class="cert-tag">🎓 ${c}</span>`).join('') || '<span style="color:var(--muted);font-size:11px;font-style:italic;">—</span>';
+      bodyRows += `<tr data-idx="${p._i}">
+        <td class="name-col">
+          <input class="inline-edit" value="${p.name}${p.p?' *':''}"
+            onchange="updatePersonField(${p._i},'name',this.value)"
+            title="Click to rename" style="font-weight:600;" />
+        </td>
+        <td class="role-col">
+          <input class="inline-edit" value="${p.role}"
+            onchange="updatePersonField(${p._i},'role',this.value)"
+            title="Click to edit role" style="font-size:11px;" />
+        </td>
+        ${p.s.map((s,si)=>`<td><button class="cell-btn ${s}" onclick="cycleScore(${p._i},${si})" title="${SKILLS[si]}: ${SCORE_LABEL[s]}">${s==='N'?'—':'●'}</button></td>`).join('')}
+        <td style="border:1px solid var(--border);padding:4px 8px;min-width:140px;">${certDisplay}</td>
+        <td style="text-align:center;border:1px solid var(--border);">
+          <button class="icon-btn arch-btn" onclick="archivePerson(${p._i})" title="Archive member">⊠</button>
+        </td>
+      </tr>`;
+    });
+  });
+
+  document.getElementById('matrixTable').innerHTML =
+    `<thead><tr>
+      <th class="left">Name</th>
+      <th class="role-col">Role</th>
+      ${SKILL_SHORT.map(s=>`<th>${s.replace('\n','<br>')}</th>`).join('')}
+      <th style="text-align:left;padding-left:8px;background:var(--panel);border:1px solid var(--border);min-width:140px;color:var(--gold);">CERTS</th>
+      <th style="width:36px;text-align:center;background:var(--panel);border:1px solid var(--border);"></th>
+    </tr></thead>
+    <tbody>${bodyRows}</tbody>`;
+}
+
+function updatePersonField(idx, field, val) {
+  // strip trailing ' *' from name edits
+  PEOPLE[idx][field] = val.replace(/ \*$/, '').trim();
+  recalcRosterStats();
+  toast(`Updated: ${PEOPLE[idx].name}`);
+}
+
+function removeMatrixRow(idx) {
+  archivePerson(idx);
+}
+function archivePerson(idx) {
+  if (!confirm(`Archive ${PEOPLE[idx].name}? They'll move to Alumni — no data is lost.`)) return;
+  PEOPLE[idx].archived = true;
+  renderMatrix(); renderRoster(); recalcRosterStats();
+  toast(`${PEOPLE[idx].name} archived → Alumni section`);
+}
+function restorePerson(idx) {
+  PEOPLE[idx].archived = false;
+  renderMatrix(); renderRoster(); recalcRosterStats();
+  toast(`${PEOPLE[idx].name} restored to active roster`);
+}
+
+function addMatrixRow() {
+  PEOPLE.push({
+    name:'New Member', role:'Role / Title',
+    rc:'role-svc', p:false,
+    s:['N','N','N','N','N','N','N','N']
+  });
+  // Switch filter to all so the new row is visible
+  document.getElementById('matrixFilter').value = '';
+  renderMatrix();
+  renderRoster();
+  recalcRosterStats();
+  toast('New member added — click name & role to edit');
+}
+
+function recalcRosterStats() {
+  const active = PEOPLE.filter(p=>!p.archived);
+  document.getElementById('stat-total').textContent    = active.length;
+  document.getElementById('stat-confirmed').textContent= active.filter(p=>!p.p).length;
+  document.getElementById('stat-pending').textContent  = active.filter(p=>p.p).length;
+}
+
+function cycleScore(pi, si) {
+  PEOPLE[pi].s[si] = SCORE_CYCLE[PEOPLE[pi].s[si]];
+  renderMatrix();
+  toast(`Updated: ${PEOPLE[pi].name} · ${SKILLS[si]}`);
+}
+
+// ── COVERAGE ──
+function coverageStatusClass(r) {
+  if (!r.gap) return 'covered';
+  const n = r.note.toLowerCase();
+  return (n.includes('unconfirmed') || n.includes('pending')) ? 'warning' : 'gap';
+}
+function coverageStatusLabel(r) {
+  if (!r.gap) return '✓ Covered';
+  const n = r.note.toLowerCase();
+  const prefix = (n.includes('pending') || n.includes('unconfirmed')) ? '⚠ ' : '✕ ';
+  return prefix + r.note;
+}
+function toggleCoverageStatus(idx) {
+  const real = COVERAGE_INDICES[idx];
+  COVERAGE[real].gap = !COVERAGE[real].gap;
+  if (!COVERAGE[real].gap) COVERAGE[real].note = 'Covered';
+  else COVERAGE[real].note = 'Gap identified';
+  renderCoverage();
+  recalcCoverageStats();
+  toast(`Status updated: ${COVERAGE[real].area}`);
+}
+function updateCoverageField(idx, field, val) {
+  const real = COVERAGE_INDICES[idx];
+  COVERAGE[real][field] = val;
+  recalcCoverageStats();
+}
+function updateCoverageNote(idx, val) {
+  const real = COVERAGE_INDICES[idx];
+  COVERAGE[real].note = val;
+  // auto-set gap flag based on note content
+  const lower = val.toLowerCase();
+  COVERAGE[real].gap = !(lower === 'covered' || lower === '✓ covered');
+  renderCoverage();
+  recalcCoverageStats();
+  toast(`Note updated`);
+}
+function removeCoverageRow(idx) {
+  const real = COVERAGE_INDICES[idx];
+  COVERAGE.splice(real, 1);
+  renderCoverage();
+  recalcCoverageStats();
+  toast('Row removed');
+}
+function addCoverageRow() {
+  COVERAGE.push({ area:'New Area', primary:'TBD', backup:'TBD', gap:true, note:'Gap identified' });
+  renderCoverage();
+  recalcCoverageStats();
+  toast('New row added');
+}
+function recalcCoverageStats() {
+  const covered = COVERAGE.filter(c=>!c.gap).length;
+  const gaps    = COVERAGE.filter(c=>c.gap).length;
+  document.getElementById('cov-covered').textContent = covered;
+  document.getElementById('cov-gaps').textContent    = gaps;
+  document.getElementById('cov-total').textContent   = COVERAGE.length;
+}
+
+let COVERAGE_INDICES = [];
+function renderCoverage() {
+  const f = document.getElementById('coverageFilter').value;
+  const filtered = COVERAGE.map((c,i)=>({...c,_i:i}))
+    .filter(c => f==='gap' ? c.gap : f==='covered' ? !c.gap : true);
+  COVERAGE_INDICES = filtered.map(c=>c._i);
+
+  document.getElementById('coverageTable').innerHTML =
+    `<thead><tr>
+      <th style="width:26%">Coverage Area</th>
+      <th style="width:18%">Primary Owner</th>
+      <th style="width:18%">Backup / Secondary</th>
+      <th style="width:16%">Status Note</th>
+      <th style="width:14%">Status</th>
+      <th style="width:8%;text-align:center">Actions</th>
+    </tr></thead>
+    <tbody>${filtered.map((r,idx)=>`
+      <tr class="${r.gap?'gap-row':''}">
+        <td><input class="inline-edit" value="${r.area}" onchange="updateCoverageField(${idx},'area',this.value)" /></td>
+        <td><input class="inline-edit" value="${r.primary}" onchange="updateCoverageField(${idx},'primary',this.value)" /></td>
+        <td><input class="inline-edit" value="${r.backup}" onchange="updateCoverageField(${idx},'backup',this.value)" /></td>
+        <td><input class="inline-edit" value="${r.note}" onchange="updateCoverageNote(${idx},this.value)" /></td>
+        <td>
+          <span class="status-pill ${coverageStatusClass(r)}" style="cursor:pointer" onclick="toggleCoverageStatus(${idx})" title="Click to toggle Covered / Gap">
+            ${coverageStatusLabel(r)}
+          </span>
+        </td>
+        <td style="text-align:center">
+          <button class="icon-btn del-btn" onclick="removeCoverageRow(${idx})" title="Remove row">✕</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+// ── HEADCOUNT ──
+const HC_STATUS_CYCLE = {
+  "Pending":      {next:"Unconfirmed", type:"warning"},
+  "Unconfirmed":  {next:"Gap — TBD",   type:"warning"},
+  "Gap — TBD":    {next:"Filled",      type:"gap"},
+  "Filled":       {next:"Pending",     type:"covered"},
+};
+function hcStatusType(status) {
+  if (status.includes('Filled'))      return 'covered';
+  if (status.includes('Gap'))         return 'gap';
+  return 'warning';
+}
+function cycleHcStatus(idx) {
+  const real = HC_INDICES[idx];
+  const cur = HEADCOUNT[real].status;
+  const match = Object.keys(HC_STATUS_CYCLE).find(k => cur.includes(k));
+  if (match) {
+    HEADCOUNT[real].status = HC_STATUS_CYCLE[match].next;
+    HEADCOUNT[real].type   = HC_STATUS_CYCLE[match].type === 'covered' ? 'covered'
+                           : HC_STATUS_CYCLE[match].type === 'gap'     ? 'gap' : 'warning';
+  }
+  renderHeadcount();
+  recalcHcStats();
+  toast(`Status updated: ${HEADCOUNT[real].role}`);
+}
+function updateHcField(idx, field, val) {
+  const real = HC_INDICES[idx];
+  HEADCOUNT[real][field] = val;
+  if (field === 'status') {
+    HEADCOUNT[real].type = hcStatusType(val);
+    renderHeadcount();
+  }
+  recalcHcStats();
+}
+function removeHcRow(idx) {
+  const real = HC_INDICES[idx];
+  HEADCOUNT.splice(real, 1);
+  renderHeadcount();
+  recalcHcStats();
+  toast('Role removed');
+}
+function addHcRow() {
+  HEADCOUNT.push({ role:'New Role', level:'TBD', status:'Pending', type:'warning', action:'Define scope and assign owner' });
+  renderHeadcount();
+  recalcHcStats();
+  toast('New role added');
+}
+function recalcHcStats() {
+  document.getElementById('hc-total').textContent       = HEADCOUNT.length;
+  document.getElementById('hc-pending').textContent     = HEADCOUNT.filter(h=>h.status.includes('Pending')).length;
+  document.getElementById('hc-unconfirmed').textContent = HEADCOUNT.filter(h=>h.status.includes('Unconfirmed')).length;
+  document.getElementById('hc-gap').textContent         = HEADCOUNT.filter(h=>h.status.includes('Gap')).length;
+}
+
+let HC_INDICES = [];
+function renderHeadcount() {
+  const f = document.getElementById('hcFilter').value;
+  const filtered = HEADCOUNT.map((h,i)=>({...h,_i:i}))
+    .filter(h => f ? h.status.includes(f) : true);
+  HC_INDICES = filtered.map(h=>h._i);
+
+  document.getElementById('hcTable').innerHTML =
+    `<thead><tr>
+      <th style="width:30%">Role / Position</th>
+      <th style="width:14%">Level</th>
+      <th style="width:14%">Status</th>
+      <th style="width:34%">Action Required</th>
+      <th style="width:8%;text-align:center">Remove</th>
+    </tr></thead>
+    <tbody>${filtered.map((h,idx)=>`
+      <tr>
+        <td><input class="inline-edit" value="${h.role}" onchange="updateHcField(${idx},'role',this.value)" style="font-weight:600" /></td>
+        <td><input class="inline-edit" value="${h.level}" onchange="updateHcField(${idx},'level',this.value)" style="color:var(--muted)" /></td>
+        <td>
+          <span class="status-pill ${hcStatusType(h.status)}" style="cursor:pointer;white-space:nowrap"
+                onclick="cycleHcStatus(${idx})" title="Click to cycle status">
+            ${h.status}
+          </span>
+        </td>
+        <td><input class="inline-edit" value="${h.action}" onchange="updateHcField(${idx},'action',this.value)" style="font-size:12px;color:var(--muted);font-style:italic" /></td>
+        <td style="text-align:center">
+          <button class="icon-btn del-btn" onclick="removeHcRow(${idx})" title="Remove role">✕</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+
+// ── MODAL ──
+function openModal(i) {
+  const p = PEOPLE[i];
+  const resps = getResps(p);
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;">
+      <div style="flex:1;">
+        <input id="modal-name-input" class="inline-edit" value="${p.name}"
+          style="font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;color:var(--text);padding:2px 6px;width:100%;"
+          onchange="updatePersonField(${i},'name',this.value);document.getElementById('modal-role-display').textContent=PEOPLE[${i}].name;" />
+        <input id="modal-role-input" class="inline-edit" value="${p.role}"
+          style="font-size:13px;color:var(--teal);margin-top:2px;width:100%;"
+          onchange="updatePersonField(${i},'role',this.value);" />
+      </div>
+      ${p.archived
+        ? `<button class="add-row-btn" style="border-color:var(--green);color:var(--green);white-space:nowrap;flex-shrink:0;" onclick="restorePerson(${i});closeModal()">↩ Restore</button>`
+        : `<button class="icon-btn arch-btn" style="flex-shrink:0;font-size:16px;" onclick="archivePerson(${i});closeModal()" title="Archive this member">⊠</button>`
+      }
+    </div>
+    <div class="gold-bar"></div>
+
+    <!-- CERTIFICATIONS -->
+    <div class="modal-section">
+      <div class="modal-section-title">Certifications</div>
+      <div id="cert-list-${i}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+        ${(p.certs||[]).length
+          ? (p.certs||[]).map((c,ci)=>`<span class="cert-tag">🎓 ${c}<span class="cert-del" onclick="removeCert(${i},${ci})">✕</span></span>`).join('')
+          : '<span style="font-size:12px;color:var(--muted);font-style:italic;">No certifications yet</span>'
+        }
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="cert-input-${i}" class="cert-add-input" placeholder="Add certification..." onkeydown="if(event.key==='Enter')addCert(${i})" />
+        <button class="add-row-btn" style="padding:3px 10px;font-size:11px;" onclick="addCert(${i})">+ Add</button>
+      </div>
+    </div>
+
+    <!-- SKILLS -->
+    <div class="modal-section">
+      <div class="modal-section-title">Skills & Proficiency — Click to update</div>
+      ${SKILLS.map((sk,si)=>`<div class="skill-row">
+        <span class="skill-name">${sk}</span>
+        <button class="skill-cycle-btn ${p.s[si]}" onclick="cycleModal(${i},${si})">${SCORE_LABEL[p.s[si]]}</button>
+      </div>`).join('')}
+    </div>
+
+    ${resps.length?`<div class="modal-section">
+      <div class="modal-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        Key Responsibilities
+        <button class="add-row-btn" style="padding:2px 10px;font-size:11px;" onclick="addResp(${i})">+ Add</button>
+      </div>
+      <ul class="resp-list" id="resp-list-${i}">${resps.map((r,ri)=>`
+        <li style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(36,54,71,.5);">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:0;"></span>
+          <input class="inline-edit" value="${r.replace(/"/g,'&quot;')}"
+            onchange="updateResp(${i},${ri},this.value)"
+            style="flex:1;font-size:13px;" />
+          <button class="icon-btn del-btn" style="font-size:12px;padding:2px 5px;" onclick="removeResp(${i},${ri})" title="Remove">✕</button>
+        </li>`).join('')}
+      </ul>
+    </div>`:`<div class="modal-section">
+      <div class="modal-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+        Key Responsibilities
+        <button class="add-row-btn" style="padding:2px 10px;font-size:11px;" onclick="addResp(${i})">+ Add</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);font-style:italic;padding:6px 0;">No responsibilities defined — click + Add to start.</p>
+    </div>`}
+
+    <!-- NOTES -->
+    <div class="modal-section">
+      <div class="modal-section-title">Notes</div>
+      <textarea id="notes-input-${i}"
+        style="width:100%;min-height:70px;background:var(--card);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:13px;padding:8px 10px;resize:vertical;outline:none;line-height:1.5;"
+        placeholder="1:1 topics · Development focus · Open items · Any notes..."
+        onchange="updatePersonField(${i},'notes',this.value)"
+        onfocus="this.style.borderColor='var(--teal)'"
+        onblur="this.style.borderColor='var(--border)'"
+      >${p.notes||''}</textarea>
+    </div>
+
+    ${p.p?`<div style="margin-top:16px;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(231,76,60,.4);border-radius:6px;font-size:12px;color:var(--red);">
+      ⚠ Pending confirmation — validate with team lead before next planning cycle.
+    </div>`:''}
+    ${p.archived?`<div style="margin-top:16px;padding:10px 14px;background:var(--gray-bg);border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--muted);">
+      📦 This member is archived. Click Restore above to move them back to the active roster.
+    </div>`:''}`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+// ── RESP HELPERS ──
+function addResp(i) {
+  ensureResps(PEOPLE[i]);
+  PEOPLE[i].resps.push('New responsibility — click to edit');
+  openModal(i);
+  toast('Responsibility added');
+}
+function removeResp(i, ri) {
+  ensureResps(PEOPLE[i]);
+  PEOPLE[i].resps.splice(ri, 1);
+  openModal(i);
+  toast('Responsibility removed');
+}
+function updateResp(i, ri, val) {
+  ensureResps(PEOPLE[i]);
+  PEOPLE[i].resps[ri] = val.trim();
+  toast(`Updated: ${PEOPLE[i].name} · Responsibility`);
+}
+
+function addCert(i) {
+  const input = document.getElementById(`cert-input-${i}`);
+  const val = input.value.trim();
+  if (!val) return;
+  if (!PEOPLE[i].certs) PEOPLE[i].certs = [];
+  PEOPLE[i].certs.push(val);
+  input.value = '';
+  openModal(i); // re-render modal
+  renderRoster(); renderMatrix();
+  toast(`Cert added: ${val}`);
+}
+function removeCert(i, ci) {
+  PEOPLE[i].certs.splice(ci, 1);
+  openModal(i);
+  renderRoster(); renderMatrix();
+  toast('Certification removed');
+}
+
+function cycleModal(pi, si) {
+  PEOPLE[pi].s[si] = SCORE_CYCLE[PEOPLE[pi].s[si]];
+  openModal(pi);
+  toast(`Updated: ${PEOPLE[pi].name} · ${SKILLS[si]}`);
+}
+
+function closeModalBg(e) { if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+function closeModal() {
+  document.getElementById('modalOverlay').style.display='none';
+  renderMatrix(); renderRoster();
+}
+
+// ── TOAST ──
+let _t;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = '✓ '+msg;
+  el.classList.add('show');
+  clearTimeout(_t);
+  _t = setTimeout(()=>el.classList.remove('show'), 2200);
+}
+
+// INIT
+renderRoster();
+recalcRosterStats();
+recalcHcStats();
+</script>
+</body>
+</html>
